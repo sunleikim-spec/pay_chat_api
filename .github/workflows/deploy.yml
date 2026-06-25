@@ -19,17 +19,11 @@ jobs:
           script: |
             cd /opt/chat_project
             git pull origin main
-            pkill -f "uvicorn main:app" || true
+            if [ -f uvicorn.pid ] && kill -0 $(cat uvicorn.pid) 2>/dev/null; then
+              kill $(cat uvicorn.pid)
+              sleep 1
+            fi
             source venv/bin/activate
-            # 先把启动命令写入临时脚本，单独后台执行，不让主shell被打断
-            cat > start_api.sh <<'EOF'
-            #!/bin/bash
-            cd /opt/chat_project
-            source venv/bin/activate
-            nohup uvicorn main:app --host 0.0.0.0 --port 8000 > app.log 2>&1 &
-            EOF
-            chmod +x start_api.sh
-            ./start_api.sh
-            # 等待启动输出一点日志再结束会话
-            sleep 2
+            setsid nohup uvicorn main:app --host 0.0.0.0 --port 8000 </dev/null >>app.log 2>&1 &
+            echo $! > uvicorn.pid
             echo "=== Deploy Success ==="
