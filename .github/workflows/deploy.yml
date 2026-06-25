@@ -18,6 +18,7 @@ jobs:
           port: 22
           script: |
             cd /opt/chat_project
+            git remote set-url origin https://github.com/sunleikim-spec/pay_chat_api.git
             git pull origin main
             if [ -f uvicorn.pid ] && kill -0 $(cat uvicorn.pid) 2>/dev/null; then
               kill $(cat uvicorn.pid)
