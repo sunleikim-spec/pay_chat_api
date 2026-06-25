@@ -1,10 +1,8 @@
 name: Auto Deploy FastAPI
 
-# 触发条件：推送到 main 分支就执行
 on:
   push:
     branches: [ main ]
-  # 支持网页手动触发调试
   workflow_dispatch:
 
 jobs:
@@ -23,7 +21,15 @@ jobs:
             git pull origin main
             pkill -f "uvicorn main:app" || true
             source venv/bin/activate
-            # 使用 setsid 脱离当前 SSH 会话，彻底避免 143 终止信号报错
-            setsid nohup uvicorn main:app --host 0.0.0.0 --port 8000 > app.log 2>&1 &
-            sleep 1
-            echo "Deploy finished successfully"
+            # 先把启动命令写入临时脚本，单独后台执行，不让主shell被打断
+            cat > start_api.sh <<'EOF'
+            #!/bin/bash
+            cd /opt/chat_project
+            source venv/bin/activate
+            nohup uvicorn main:app --host 0.0.0.0 --port 8000 > app.log 2>&1 &
+            EOF
+            chmod +x start_api.sh
+            ./start_api.sh
+            # 等待启动输出一点日志再结束会话
+            sleep 2
+            echo "=== Deploy Success ==="
