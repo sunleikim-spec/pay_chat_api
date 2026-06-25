@@ -23,5 +23,7 @@ jobs:
             git pull origin main
             pkill -f "uvicorn main:app" || true
             source venv/bin/activate
-            nohup uvicorn main:app --host 0.0.0.0 --port 8000 > app.log 2>&1 &
-            echo "Deploy finish"
+            # 使用 setsid 脱离当前 SSH 会话，彻底避免 143 终止信号报错
+            setsid nohup uvicorn main:app --host 0.0.0.0 --port 8000 > app.log 2>&1 &
+            sleep 1
+            echo "Deploy finished successfully"
