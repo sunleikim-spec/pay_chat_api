@@ -9,7 +9,21 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Connect to Server & Deploy
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Sync files to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
+          port: 22
+          source: "."
+          target: "/opt/chat_project"
+          rm: false
+
+      - name: Restart service
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -18,8 +32,6 @@ jobs:
           port: 22
           script: |
             cd /opt/chat_project
-            git remote set-url origin https://github.com/sunleikim-spec/pay_chat_api.git
-            git pull origin main
             if [ -f uvicorn.pid ] && kill -0 $(cat uvicorn.pid) 2>/dev/null; then
               kill $(cat uvicorn.pid)
               sleep 1
