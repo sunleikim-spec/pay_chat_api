@@ -10,6 +10,10 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="PayChatAPI", version="1.0")
 
+@app.get("/")
+def root():
+    return {"message": "PayChatAPI running", "version": "1.1"}
+
 # 创建用户
 @app.post("/users", response_model=UserResp)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
